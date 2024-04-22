@@ -1,0 +1,7 @@
+services:
+  api:
+    image: tb_waiter:local
+    container_name: tb_waiter
+    build: .
+    ports:
+      - "8000:80"
