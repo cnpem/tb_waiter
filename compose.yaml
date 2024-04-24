@@ -7,6 +7,9 @@ services:
       - /mnt:/mnt:ro
     networks:
       - api_network
+    environment:
+      - HOSTNAME=${HOSTNAME}
+      - API_TOKEN=${API_TOKEN}
   reverse-proxy:
     image: nginx:alpine
     container_name: reverse-proxy

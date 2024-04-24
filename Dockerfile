@@ -1,5 +1,9 @@
 FROM python:3.12-slim
 
+ENV PYTHON_ENV=production
+ARG API_TOKEN
+ARG HOSTNAME
+
 WORKDIR /code
 
 COPY ./requirements.txt /code/requirements.txt

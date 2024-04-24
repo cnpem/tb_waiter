@@ -1,63 +1,18 @@
 from typing import Annotated
-
 import os
-import subprocess
-import socket
-from fastapi import FastAPI, Body
 
-from pydantic import BaseModel
+from fastapi import FastAPI, Depends, Body, HTTPException
 
-
-class TensorboardInstance(BaseModel):
-    url: str
-    logdir: str
-    name: str
-    pid: int
-
-
-class CreateTensorboardInstanceRequest(BaseModel):
-    logdir: str
-    name: str
+from .models import CreateTensorboardInstanceRequest, TensorboardInstance
+from .dependencies import verify_token, config
+from .tensorboard import start_tensorboard
 
 
 tb_instances: dict[str, TensorboardInstance] = {}
-hostname = "localhost"
-# docker_hostname = "api"
+hostname = config.hostname
 
 
-def get_available_port():
-    initial_port = 6006
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    port = initial_port
-    while port < 65535:
-        try:
-            s.bind((hostname, port))
-            s.close()
-            return port
-        except OSError:
-            port += 1
-    return None
-
-
-def start_tensorboard(logdir: str, name: str):
-    port = get_available_port()
-    p = subprocess.Popen(
-        [
-            "tensorboard",
-            "--logdir",
-            logdir,
-            "--port",
-            str(port),
-            "--bind_all",
-            "--path_prefix",
-            f"/{name}/{port}",
-        ]
-    )
-
-    return p, port
-
-
-app = FastAPI(root_path="/api")
+app = FastAPI(root_path="/api", dependencies=[Depends(verify_token)])
 
 
 @app.get("/")
@@ -81,11 +36,15 @@ def start_tensorboard_instance(
     name = request.name
     if name in tb_instances:
         return {"message": "Instance already exists"}
-    p, port = start_tensorboard(logdir, name)
-    url = f"http://{hostname}:{port}/{name}/{port}"
-    tb_instance = TensorboardInstance(url=url, logdir=logdir, name=name, pid=p.pid)
-    tb_instances[name] = tb_instance
-    return tb_instance
+
+    try:
+        p, port = start_tensorboard(logdir, name)
+        url = f"http://{hostname}/{name}/{port}"
+        tb_instance = TensorboardInstance(url=url, logdir=logdir, name=name, pid=p.pid)
+        tb_instances[name] = tb_instance
+        return tb_instance
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/tensorboard/kill/{name}")
