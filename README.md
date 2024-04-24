@@ -9,7 +9,9 @@ Simple api to manage tensorboard instances on demand.
 - [x] Add a route to stop
 - [x] Add a route to get the list of the active tensorboards
 - [x] setup docker
+- [x] setup reverse proxy with dynamic paths to tensorboards ports
+- [] setup ssl
 - [] clean up idle tensorboards
 - [] token route
-- [] connect w/ frontend
-- [] serve urls as iframe (?)
+- [] test connection w/ frontend
+- [] setup ci workflows

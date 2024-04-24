@@ -1,7 +1,10 @@
+from typing import Annotated
+
 import os
 import subprocess
 import socket
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
+
 from pydantic import BaseModel
 
 
@@ -12,8 +15,14 @@ class TensorboardInstance(BaseModel):
     pid: int
 
 
+class CreateTensorboardInstanceRequest(BaseModel):
+    logdir: str
+    name: str
+
+
 tb_instances: dict[str, TensorboardInstance] = {}
 hostname = "localhost"
+# docker_hostname = "api"
 
 
 def get_available_port():
@@ -30,16 +39,25 @@ def get_available_port():
     return None
 
 
-def start_tensorboard(logdir: str):
+def start_tensorboard(logdir: str, name: str):
     port = get_available_port()
     p = subprocess.Popen(
-        ["tensorboard", "--logdir", logdir, "--host", hostname, "--port", str(port)]
+        [
+            "tensorboard",
+            "--logdir",
+            logdir,
+            "--port",
+            str(port),
+            "--bind_all",
+            "--path_prefix",
+            f"/{name}/{port}",
+        ]
     )
 
     return p, port
 
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 
 
 @app.get("/")
@@ -47,14 +65,24 @@ def read_root():
     return {"Hello": "World"}
 
 
-logdir = "/ibira/lnls/labs/tepui/home/alan.peixinho/workspace_test/networks/custom-unet2d-mynet/logs"
-name = "test"
+@app.get("/tensorboard")
+def get_tensorboard_instance(name: str):
+    tb_instance = tb_instances.get(name)
+    if tb_instance:
+        return tb_instance
+    return {"message": "Instance not found"}
 
 
-@app.get("/tensorboard/start")
-def start_tensorboard_instance(logdir: str = logdir, name: str = name):
-    p, port = start_tensorboard(logdir)
-    url = f"http://{hostname}:{port}"
+@app.post("/tensorboard/start")
+def start_tensorboard_instance(
+    request: Annotated[CreateTensorboardInstanceRequest, Body]
+):
+    logdir = request.logdir
+    name = request.name
+    if name in tb_instances:
+        return {"message": "Instance already exists"}
+    p, port = start_tensorboard(logdir, name)
+    url = f"http://{hostname}:{port}/{name}/{port}"
     tb_instance = TensorboardInstance(url=url, logdir=logdir, name=name, pid=p.pid)
     tb_instances[name] = tb_instance
     return tb_instance

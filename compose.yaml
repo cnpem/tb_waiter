@@ -3,5 +3,23 @@ services:
     image: tb_waiter:local
     container_name: tb_waiter
     build: .
+    volumes:
+      - /mnt:/mnt:ro
+    networks:
+      - api_network
+  reverse-proxy:
+    image: nginx:alpine
+    container_name: reverse-proxy
     ports:
-      - "8000:80"
+      - "9000:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - api_network
+    depends_on:
+      - api
+
+networks:
+  api_network:
+    driver: bridge
