@@ -11,7 +11,7 @@ Simple api to manage tensorboard instances on demand.
 - [x] setup docker
 - [x] setup reverse proxy with dynamic paths to tensorboards ports
 - [x] setup ssl
-- [] clean up idle tensorboards
+- [x] clean up idle tensorboards
 - [x] security token on api routes
 - [] secure tensorboard instances ?
 - [] test connection w/ frontend

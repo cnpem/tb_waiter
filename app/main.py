@@ -1,15 +1,16 @@
 from typing import Annotated
-import os
 
 from fastapi import FastAPI, Depends, Body, HTTPException
 
 from .models import CreateTensorboardInstanceRequest, TensorboardInstance
 from .dependencies import verify_token, config
 from .tensorboard import start_tensorboard
+from .tva import create_mobius
 
 
-tb_instances: dict[str, TensorboardInstance] = {}
 hostname = config.hostname
+ttl = 300
+get, get_all, set, remove, contains = create_mobius(ttl)
 
 
 app = FastAPI(root_path="/api", dependencies=[Depends(verify_token)])
@@ -22,10 +23,9 @@ def read_root():
 
 @app.get("/tensorboard")
 def get_tensorboard_instance(name: str):
-    tb_instance = tb_instances.get(name)
-    if tb_instance:
-        return tb_instance
-    return {"message": "Instance not found"}
+    if contains(name):
+        return get(name)
+    raise HTTPException(status_code=404, detail="Instance not found")
 
 
 @app.post("/tensorboard/start")
@@ -34,32 +34,30 @@ def start_tensorboard_instance(
 ):
     logdir = request.logdir
     name = request.name
-    if name in tb_instances:
-        return {"message": "Instance already exists"}
+    if contains(name):
+        return get(name)
 
     try:
         p, port = start_tensorboard(logdir, name)
         url = f"http://{hostname}/{name}/{port}"
-        tb_instance = TensorboardInstance(url=url, logdir=logdir, name=name, pid=p.pid)
-        tb_instances[name] = tb_instance
-        return tb_instance
+        instance = TensorboardInstance(url=url, logdir=logdir, name=name, pid=p.pid)
+        set(name, instance)
+        return instance
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/tensorboard/kill/{name}")
 def kill_tensorboard_instance(name: str):
-    tb_instance = tb_instances.get(name)
-    if tb_instance:
-        os.kill(tb_instance.pid, 9)
-        del tb_instances[name]
+    if contains(name):
+        remove(name)
         return {"message": "Instance killed"}
-    return {"message": "Instance not found"}
+    raise HTTPException(status_code=404, detail="Instance not found")
 
 
 @app.get("/tensorboard/instances")
 def get_tensorboard_instances():
-    return tb_instances
+    return get_all()
 
 
 if __name__ == "__main__":
