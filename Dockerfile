@@ -3,6 +3,7 @@ FROM python:3.12-slim
 ENV PYTHON_ENV=production
 ARG API_TOKEN
 ARG HOSTNAME
+ARG BOARD_TTL
 
 WORKDIR /code
 

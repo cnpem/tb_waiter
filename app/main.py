@@ -9,7 +9,7 @@ from .tva import create_mobius
 
 
 hostname = config.hostname
-ttl = 300
+ttl = config.board_ttl
 get, get_all, set, remove, contains = create_mobius(ttl)
 
 

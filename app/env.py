@@ -6,3 +6,4 @@ class Settings(BaseSettings):
     python_env: str = "development"
     hostname: str = "localhost"
     api_token: list[str]
+    board_ttl: int = 300
