@@ -1,6 +1,9 @@
 from typing import Annotated
 
 from fastapi import FastAPI, Depends, Body, HTTPException
+from contextlib import asynccontextmanager
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 from .models import CreateTensorboardInstanceRequest, TensorboardInstance
 from .dependencies import verify_token, config
@@ -10,10 +13,21 @@ from .tva import create_mobius
 
 hostname = config.hostname
 ttl = config.board_ttl
-get, get_all, set, remove, contains = create_mobius(ttl)
+get, get_all, set, remove, contains, prune = create_mobius(ttl)
 
 
-app = FastAPI(root_path="/api", dependencies=[Depends(verify_token)])
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(
+        id="mobius.m.mobius", func=prune, trigger="interval", seconds=2 * ttl
+    )
+    scheduler.start()
+    yield
+    scheduler.shutdown()
+
+
+app = FastAPI(root_path="/api", dependencies=[Depends(verify_token)], lifespan=lifespan)
 
 
 @app.get("/")
@@ -58,9 +72,3 @@ def kill_tensorboard_instance(name: str):
 @app.get("/tensorboard/instances")
 def get_tensorboard_instances():
     return get_all()
-
-
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=8000)

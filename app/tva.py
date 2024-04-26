@@ -62,4 +62,4 @@ def create_mobius(time_branch: int):
         except KeyError:
             return False
 
-    return get, get_all, set, remove, contains
+    return get, get_all, set, remove, contains, prune
