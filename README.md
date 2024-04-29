@@ -14,6 +14,6 @@ Simple api to manage tensorboard instances on demand.
 - [x] clean up idle tensorboards
 - [x] background tasks to clean up tensorboards
 - [x] security token on api routes
-- [] secure tensorboard instances ?
-- [] test connection w/ frontend
-- [] setup ci workflows
+- [ ] secure tensorboard instances ?
+- [ ] test connection w/ frontend
+- [x] setup ci workflows
