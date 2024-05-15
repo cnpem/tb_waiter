@@ -62,7 +62,7 @@ def start_tensorboard_instance(
 
     try:
         p, port = start_tensorboard(logdir, name)
-        url = f"http://{hostname}/{name}/{port}"
+        url = f"https://{hostname}/{name}/{port}"
         instance = TensorboardInstance(url=url, logdir=logdir, name=name, pid=p.pid)
         set(name, instance)
         return instance
@@ -79,5 +79,5 @@ def kill_tensorboard_instance(name: str):
 
 
 @app.get("/tensorboard/instances")
-def get_tensorboard_instances() -> list[TensorboardInstance]:
+def get_tensorboard_instances() -> dict[str, TensorboardInstance]:
     return get_all()
