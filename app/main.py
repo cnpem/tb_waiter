@@ -36,7 +36,7 @@ def read_root():
 
 
 @app.get("/tensorboard")
-def get_tensorboard_instance(name: str):
+def get_tensorboard_instance(name: str) -> TensorboardInstance:
     if contains(name):
         return get(name)
     raise HTTPException(status_code=404, detail="Instance not found")
@@ -45,7 +45,7 @@ def get_tensorboard_instance(name: str):
 @app.post("/tensorboard/start")
 def start_tensorboard_instance(
     request: Annotated[CreateTensorboardInstanceRequest, Body]
-):
+) -> TensorboardInstance:
     logdir = request.logdir
     name = request.name
     if contains(name):
@@ -70,5 +70,5 @@ def kill_tensorboard_instance(name: str):
 
 
 @app.get("/tensorboard/instances")
-def get_tensorboard_instances():
+def get_tensorboard_instances() -> list[TensorboardInstance]:
     return get_all()
