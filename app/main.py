@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import FastAPI, Depends, Body, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -28,6 +29,14 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(root_path="/api", dependencies=[Depends(verify_token)], lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
