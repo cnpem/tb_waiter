@@ -4,3 +4,4 @@ pydantic
 pydantic-settings
 tensorboard
 apscheduler
+protobuf==4.25
