@@ -30,6 +30,8 @@ def start_tensorboard(logdir: str, name: str):
             "--bind_all",
             "--path_prefix",
             f"/{name}/{port}",
+            "--load_fast",
+            "false"
         ]
     )
 
