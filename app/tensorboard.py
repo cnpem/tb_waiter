@@ -31,7 +31,9 @@ def start_tensorboard(logdir: str, name: str):
             "--path_prefix",
             f"/{name}/{port}",
             "--load_fast",
-            "false"
+            "false",
+            "--reload_multifile",
+            "true"
         ]
     )
 
