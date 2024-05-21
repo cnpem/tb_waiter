@@ -30,15 +30,12 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(root_path="/api", dependencies=[Depends(verify_token)], lifespan=lifespan)
 
-origins = [
-    "http://localhost",
-    "https://deepsirius.lnls.br"
-]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    # allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
